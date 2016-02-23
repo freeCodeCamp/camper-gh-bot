@@ -56,15 +56,35 @@ github.authenticate({
   token: process.env.GITHUB_TOKEN
 });
 
-var app = express(),
+var app = express();
+
+function validatePullRequest(data) {
+  // default config
+  var repoConfig = {
+    userBlacklistForPR: ['greenkeeperio-bot', 'QuincyLarson', 'BerkeleyTrue'],
+    actions: ['opened', 'reopened', 'synchronize'],
+    rules: {
+      critical: {
+        blacklistedBaseBranchNames: ['master'],
+        blacklistedHeadBranchNames: ['master', 'staging']
+      },
+      allowedBranchNames: ['fix/', 'feature/'],
+      allowedCommitCount: 1
+    }
+  },
   messageText = '';
 
-async function work(body) {
-  var data = {};
-  try {
-    data = JSON.parse(body.toString());
-  } catch (e) {
-    console.error(e);
+  if (repoConfig.actions.indexOf(data.action) === -1) {
+    console.log(
+      'Skipping because action is ' + data.action + '.',
+      'We only care about: "' + repoConfig.actions.join("', '") + '"'
+    );
+    return;
+  }
+  
+  if (repoConfig.userBlacklistForPR.indexOf(data.pull_request.user.login) >= 0) {
+    console.log('Skipping because blacklisted user created Pull Request.');
+    return;
   }
 
   if (data.action === 'opened' || data.action === 'reopened') {
@@ -111,7 +131,17 @@ async function work(body) {
       body: msgTest
     });
   }
-  return;
+}
+
+async function work(body) {
+  var data = {};
+  try {
+    data = JSON.parse(body.toString());
+  } catch (e) {
+    console.error(e);
+  }
+
+  validatePullRequest(data);
 }
 
 app.post('/', function(req, res) {
