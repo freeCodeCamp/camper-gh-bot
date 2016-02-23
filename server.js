@@ -15,7 +15,6 @@ config = require('./package.json').config,
 express = require('express'),
 fs = require('fs'),
 util = require('util'),
-request = require('request'),
 GitHubApi = require('github4');
 
 if (!process.env.GITHUB_TOKEN) {
@@ -35,10 +34,10 @@ if (!process.env.GITHUB_TOKEN) {
 if (!process.env.GITHUB_USER) {
   console.warn(
     'There was no github user detected.',
-    'This is fine, but TestPRBot won\'t work with private repos.'
+    'This is fine, but FccPrBot won\'t work with private repos.'
   );
   console.warn(
-    'To make TestPRBot work with private repos, please expose',
+    'To make FccPrBot work with private repos, please expose',
     'GITHUB_USER and GITHUB_PASSWORD as environment variables.',
     'The user and password must have access to the private repo',
     'you want to use.'
@@ -101,6 +100,16 @@ async function work(body) {
         console.error(error);
       }
     });
+  } else if (data.action === 'synchronize') {
+    var msgTest = '@' + data.sender.login + ' updated the pull request.';
+    console.log(msgTest);
+
+    github.issues.createComment({
+      user: data.repository.owner.login,
+      repo: data.repository.name,
+      number: data.pull_request.number,
+      body: msgTest
+    });
   }
   return;
 }
@@ -114,7 +123,7 @@ app.post('/', function(req, res) {
 app.get('/', function(req, res) {
   res.send(
     'FreeCodeCamp PR Bot is Active. ' +
-    'Go to https://github.com/bugron/TestPRBot for more information.'
+    'Go to https://github.com/bugron/FccPrBot for more information.'
   );
 });
 

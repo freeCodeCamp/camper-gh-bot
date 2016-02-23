@@ -6,20 +6,18 @@
   "scripts": {
     "start": "node run-server.js"
   },
-  "main": "./run-mention-bot.js",
+  "main": "./server.js",
   "engines": {
     "node": ">=4"
   },
   "config": {},
   "dependencies": {
     "babel-core": "^6.0.0",
-    "babel-preset-react": "^6.1.2",
     "babel-plugin-syntax-async-functions": "^6.1.4",
     "babel-plugin-transform-regenerator": "^6.1.4",
     "babel-polyfill": "^6.1.4",
     "bl": "^1.0.0",
     "express": "^4.13.3",
-    "request": "^2.69.0",
     "dotenv": "^2.0.0",
     "github4": "^0.5.3"
   }
