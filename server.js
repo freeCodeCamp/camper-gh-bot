@@ -8,7 +8,6 @@
  *
  * @flow
  */
-
 require('dotenv').load();
 
 var bl = require('bl'),
@@ -70,47 +69,41 @@ async function work(body) {
   }
 
   if (data.action === 'opened' || data.action === 'reopened') {
-    var options = {
-      url: data.pull_request.commits_url,
-      json: true,
-      headers: {
-        'User-Agent': 'request'
-      }
-    };
+    github.pullRequests.getCommits({
+      user: data.repository.owner.login,
+      repo: data.repository.name,
+      number: data.pull_request.number,
+    }, function(err, body) {
+      if (!err) {
+        messageText = [
+          'This PR is ' + data.action,
+          'Pushed branch is `' + data.pull_request.head.ref + '`',
+          'PR is opened against `' + data.pull_request.base.ref + '` branch',
+          'PR has ' + data.pull_request.commits + ' commit(s)'
+        ].join('\n');
 
-    setTimeout(function() {
-      request(options, function(error, response, body) {
-        if (!error) {
-          messageText = [
-            'This PR is ' + data.action,
-            'Pushed branch is `' + data.pull_request.head.ref + '`',
-            'PR is opened against `' + data.pull_request.base.ref + '` branch',
-            'PR has ' + data.pull_request.commits + ' commit(s)'
-          ].join('\n');
+        console.log(messageText);
 
-          console.log(messageText);
-
-          if (body.length) {
-            for (var i = 0; i < body.length; i++) {
-              console.log(i + ': ' + body[i].commit.message);
-              messageText += '\n' + (i + 1) + ': `' + body[i].commit.message + '`';
-            }
+        if (body.length) {
+          for (var i = 0; i < body.length; i++) {
+            console.log(i + ': ' + body[i].commit.message);
+            messageText += '\n' + (i + 1) + ': `' + body[i].commit.message + '`';
           }
-    
-          github.issues.createComment({
-            user: data.repository.owner.login, // 'fbsamples'
-            repo: data.repository.name, // 'bot-testing'
-            number: data.pull_request.number, // 23
-            body: messageText
-          });
-        } else {
-            console.error(error);
         }
-      });
-    }, 5000);
+
+        github.issues.createComment({
+          user: data.repository.owner.login,
+          repo: data.repository.name,
+          number: data.pull_request.number,
+          body: messageText
+        });
+      } else {
+        console.error(error);
+      }
+    });
   }
   return;
-};
+}
 
 app.post('/', function(req, res) {
   req.pipe(bl(function(err, body) {
