@@ -81,13 +81,13 @@ function validatePullRequest(data) {
     );
     return;
   }
-  
-  if (repoConfig.userBlacklistForPR.indexOf(data.pull_request.user.login) >= 0) {
-    console.log('Skipping because blacklisted user created Pull Request.');
-    return;
-  }
 
   if (data.action === 'opened' || data.action === 'reopened') {
+    if (repoConfig.userBlacklistForPR.indexOf(data.pull_request.user.login) >= 0) {
+      console.log('Skipping because blacklisted user created Pull Request.');
+      return;
+    }
+
     github.pullRequests.getCommits({
       user: data.repository.owner.login,
       repo: data.repository.name,
