@@ -81,13 +81,12 @@ function validatePullRequest(data) {
       },
       allowedBranchNames: [
         'fix/',
-        'feature/',
-        'add/'
+        'feature/'
       ],
-      allowedCommitCount: 1
+      maxCommitCount: 1
     }
   },
-  messageText = '';
+  debugInfo = '';
 
   if (repoConfig.actions.indexOf(data.action) === -1) {
     console.log(
@@ -112,15 +111,16 @@ function validatePullRequest(data) {
       number: data.pull_request.number,
     }, function(err, body) {
       if (!err) {
-        warnArray = [];
-        messageText = [
-          'This PR is ' + data.action,
+        warnArray = ['@' + data.sender.login + ' thanks for the PR.'];
+        debugInfo = [
+          'This PR (' + data.pull_request.base.repo.full_name + '#' +
+            data.number + ') is ' + data.action,
           'Pushed branch is `' + data.pull_request.head.ref + '`',
           'PR is opened against `' + data.pull_request.base.ref + '` branch',
           'PR has ' + data.pull_request.commits + ' commit(s)'
         ].join('\n');
 
-        console.log(messageText);
+        console.log(debugInfo);
 
         var shouldBeClosed = false;
         if (
@@ -142,8 +142,8 @@ function validatePullRequest(data) {
         ) {
           warnArray.push(
             'You\'ve done your changes in `' + data.pull_request.head.ref +
-            '` branch. Always work in a separate, correctly named branch,' +
-            'please.'
+            '` branch. Always work in a separate, correctly named branch, ' +
+            'please. Closing this PR.'
           );
           shouldBeClosed = true;
         }
@@ -151,7 +151,7 @@ function validatePullRequest(data) {
         var isPrefix = repoConfig.rules.allowedBranchNames.some(function(val) {
           var reg = new RegExp(val, 'i');
           return data.pull_request.head.ref.match(reg);
-        })
+        });
 
         if (!isPrefix) {
           warnArray.push(
@@ -163,13 +163,11 @@ function validatePullRequest(data) {
 
         if (body.length) {
           for (var l = 0; l < body.length; l++) {
-            console.log(l + ': ' + body[l].commit.message);
-            messageText += '\n' + (l + 1) + ': `' +
-              body[l].commit.message + '`';
+            // show more debug info (commits of the current PR)
+            console.log((l + 1) + ': ' + body[l].commit.message);
           }
-          messageText += '\n\n';
 
-          if (body.length > 1) {
+          if (body.length > repoConfig.rules.maxCommitCount) {
             warnArray.push(
               'You have pushed more than one commit. ' +
               'When you finish editing, please, [squash](https://github.com/' +
@@ -179,22 +177,20 @@ function validatePullRequest(data) {
           }
         }
 
-        warnArray.push(
-          'Please review our [**Guidelines for Contributing**]' +
-          '(https://github.com/FreeCodeCamp/FreeCodeCamp/blob/staging/' +
-          'CONTRIBUTING.md), thank you!.'
-        );
+        if (warnArray.length > 1) {
+          warnArray.push(
+            'Please, review our [**Guidelines for Contributing**]' +
+            '(https://github.com/FreeCodeCamp/FreeCodeCamp/blob/staging/' +
+            'CONTRIBUTING.md), thank you!.'
+          );
 
-        if (warnArray.length) {
-          messageText += warnArray.join('\n');
+          github.issues.createComment({
+            user: data.repository.owner.login,
+            repo: data.repository.name,
+            number: data.pull_request.number,
+            body: warnArray.join('\n')
+          });
         }
-
-        github.issues.createComment({
-          user: data.repository.owner.login,
-          repo: data.repository.name,
-          number: data.pull_request.number,
-          body: messageText
-        });
 
         if (shouldBeClosed) {
           github.pullRequests.update({
