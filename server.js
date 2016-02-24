@@ -68,7 +68,7 @@ function validatePullRequest(data) {
         blacklistedBaseBranchNames: ['master'],
         blacklistedHeadBranchNames: ['master', 'staging']
       },
-      allowedBranchNames: ['fix/', 'feature/'],
+      allowedBranchNames: ['fix/', 'feature/', 'add/'],
       allowedCommitCount: 1
     }
   },
@@ -94,6 +94,7 @@ function validatePullRequest(data) {
       number: data.pull_request.number,
     }, function(err, body) {
       if (!err) {
+        warnArray = [];
         messageText = [
           'This PR is ' + data.action,
           'Pushed branch is `' + data.pull_request.head.ref + '`',
@@ -103,11 +104,44 @@ function validatePullRequest(data) {
 
         console.log(messageText);
 
+        var shouldBeClosed = false;
+        if (repoConfig
+              .rules.critical.blacklistedBaseBranchNames
+              .indexOf(data.pull_request.base.ref) >= 0) {
+          warnArray.push('This PR is opened against ' + data.pull_request.base.ref +
+            ' branch and will be closed.');
+          shouldBeClosed = true;
+        }
+
+        if (repoConfig
+              .rules.critical.blacklistedHeadBranchNames
+              .indexOf(data.pull_request.head.ref) >= 0) {
+          warnArray.push('You\'ve done your changes in ' + data.pull_request.head.ref +
+            ' branch. Always work in a separate, correctly named branch, please.');
+          shouldBeClosed = true;
+        }
+
+        var prefix = repoConfig.rules.allowedBranchNames;
+        var isPrefix = prefix.some(function(val) {
+          var reg = new RegExp(val, 'i');
+          return data.pull_request.head.ref.match(reg);
+        })
+
+        if (!isPrefix) {
+          warnArray.push('Your branch name should start with one of ' + 
+            repoConfig.rules.allowedBranchNames.join(', ') +
+            ' prefixes. Name, your branches correctly next time, please.');
+        }
+
         if (body.length) {
-          for (var i = 0; i < body.length; i++) {
-            console.log(i + ': ' + body[i].commit.message);
-            messageText += '\n' + (i + 1) + ': `' + body[i].commit.message + '`';
+          for (var l = 0; l < body.length; l++) {
+            console.log(l + ': ' + body[l].commit.message);
+            messageText += '\n' + (l + 1) + ': `' + body[l].commit.message + '`\n';
           }
+        }
+
+        if (warnArray.length) {
+          messageText += warnArray.join('\n');
         }
 
         github.issues.createComment({
@@ -116,6 +150,15 @@ function validatePullRequest(data) {
           number: data.pull_request.number,
           body: messageText
         });
+
+        if (shouldBeClosed) {
+          github.pullRequests.update({
+            user: data.repository.owner.login,
+            repo: data.repository.name,
+            number: data.pull_request.number,
+            state: 'closed'
+          });
+        }
       } else {
         console.error(error);
       }
