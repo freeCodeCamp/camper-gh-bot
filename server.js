@@ -61,14 +61,29 @@ var app = express();
 function validatePullRequest(data) {
   // default config
   var repoConfig = {
-    userBlacklistForPR: ['greenkeeperio-bot', 'QuincyLarson', 'BerkeleyTrue'],
-    actions: ['opened', 'reopened', 'synchronize'],
+    userBlacklistForPR: [
+      'greenkeeperio-bot',
+      'QuincyLarson',
+      'BerkeleyTrue'
+    ],
+    actions: [
+      'opened',
+      'reopened',
+      'synchronize'
+    ],
     rules: {
       critical: {
         blacklistedBaseBranchNames: ['master'],
-        blacklistedHeadBranchNames: ['master', 'staging']
+        blacklistedHeadBranchNames: [
+          'master',
+          'staging'
+        ]
       },
-      allowedBranchNames: ['fix/', 'feature/', 'add/'],
+      allowedBranchNames: [
+        'fix/',
+        'feature/',
+        'add/'
+      ],
       allowedCommitCount: 1
     }
   },
@@ -77,13 +92,16 @@ function validatePullRequest(data) {
   if (repoConfig.actions.indexOf(data.action) === -1) {
     console.log(
       'Skipping because action is ' + data.action + '.',
-      'We only care about: "' + repoConfig.actions.join("', '") + '"'
+      'We only care about: \'' + repoConfig.actions.join("', '") + '\''
     );
     return;
   }
 
   if (data.action === 'opened' || data.action === 'reopened') {
-    if (repoConfig.userBlacklistForPR.indexOf(data.pull_request.user.login) >= 0) {
+    if (
+      repoConfig.userBlacklistForPR
+        .indexOf(data.pull_request.user.login) >= 0
+    ) {
       console.log('Skipping because blacklisted user created Pull Request.');
       return;
     }
@@ -105,40 +123,67 @@ function validatePullRequest(data) {
         console.log(messageText);
 
         var shouldBeClosed = false;
-        if (repoConfig
-              .rules.critical.blacklistedBaseBranchNames
-              .indexOf(data.pull_request.base.ref) >= 0) {
-          warnArray.push('This PR is opened against ' + data.pull_request.base.ref +
-            ' branch and will be closed.');
+        if (
+          repoConfig
+            .rules.critical.blacklistedBaseBranchNames
+            .indexOf(data.pull_request.base.ref) >= 0
+        ) {
+          warnArray.push(
+            'This PR is opened against `' + data.pull_request.base.ref +
+            '` branch and will be closed.'
+          );
           shouldBeClosed = true;
         }
 
-        if (repoConfig
-              .rules.critical.blacklistedHeadBranchNames
-              .indexOf(data.pull_request.head.ref) >= 0) {
-          warnArray.push('You\'ve done your changes in ' + data.pull_request.head.ref +
-            ' branch. Always work in a separate, correctly named branch, please.');
+        if (
+          repoConfig
+            .rules.critical.blacklistedHeadBranchNames
+            .indexOf(data.pull_request.head.ref) >= 0
+        ) {
+          warnArray.push(
+            'You\'ve done your changes in `' + data.pull_request.head.ref +
+            '` branch. Always work in a separate, correctly named branch,' +
+            'please.'
+          );
           shouldBeClosed = true;
         }
 
-        var prefix = repoConfig.rules.allowedBranchNames;
-        var isPrefix = prefix.some(function(val) {
+        var isPrefix = repoConfig.rules.allowedBranchNames.some(function(val) {
           var reg = new RegExp(val, 'i');
           return data.pull_request.head.ref.match(reg);
         })
 
         if (!isPrefix) {
-          warnArray.push('Your branch name should start with one of ' + 
+          warnArray.push(
+            'Your branch name should start with one of `' + 
             repoConfig.rules.allowedBranchNames.join(', ') +
-            ' prefixes. Name, your branches correctly next time, please.');
+            '` prefixes. Name, your branches correctly next time, please.'
+          );
         }
 
         if (body.length) {
           for (var l = 0; l < body.length; l++) {
             console.log(l + ': ' + body[l].commit.message);
-            messageText += '\n' + (l + 1) + ': `' + body[l].commit.message + '`\n';
+            messageText += '\n' + (l + 1) + ': `' +
+              body[l].commit.message + '`';
+          }
+          messageText += '\n\n';
+
+          if (body.length > 1) {
+            warnArray.push(
+              'You have pushed more than one commit. ' +
+              'When you finish editing, please, [squash](https://github.com/' +
+              'FreeCodeCamp/FreeCodeCamp/wiki/git-rebase#squashing-' +
+              'multiple-commits-into-one) your commits into one.'
+            );
           }
         }
+
+        warnArray.push(
+          'Please review our [**Guidelines for Contributing**]' +
+          '(https://github.com/FreeCodeCamp/FreeCodeCamp/blob/staging/' +
+          'CONTRIBUTING.md), thank you!.'
+        );
 
         if (warnArray.length) {
           messageText += warnArray.join('\n');
