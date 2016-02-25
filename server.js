@@ -15,7 +15,9 @@ config = require('./package.json').config,
 express = require('express'),
 fs = require('fs'),
 util = require('util'),
-GitHubApi = require('github4');
+GitHubApi = require('github4'),
+crypto = require("crypto"),
+compare = require('secure-compare');
 
 if (!process.env.GITHUB_TOKEN) {
   console.error('The bot was started without a github account to post with.');
@@ -234,7 +236,7 @@ function validatePullRequest(data) {
           });
         }
       } else {
-        console.error(error);
+        console.error(err);
       }
     });
   } else if (data.action === 'synchronize') {
@@ -263,7 +265,22 @@ async function work(body) {
 
 app.post('/', function(req, res) {
   req.pipe(bl(function(err, body) {
-    work(body).then(function() { res.end(); });
+    var signature = req.headers['x-hub-signature'],
+      computedSignature = 'sha1=' + crypto.
+        createHmac("sha1", process.env.SECRET_TOKEN).update(body.toString()).
+        digest("hex");
+    if (
+      res.req.headers['x-hub-signature'] === signature &&
+      res.req.headers['x-hub-signature'] === computedSignature &&
+      computedSignature === signature &&
+      compare(computedSignature, signature)  &&
+      compare(computedSignature, res.req.headers['x-hub-signature']) &&
+      compare(signature, res.req.headers['x-hub-signature'])
+    ) {
+      work(body).then(function() { res.end(); });
+    } else {
+      console.error('This request is not secured! Aborting.');
+    }
  }));
 });
 

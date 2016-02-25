@@ -19,6 +19,8 @@
     "bl": "^1.0.0",
     "express": "^4.13.3",
     "dotenv": "^2.0.0",
-    "github4": "^0.5.3"
+    "github4": "^0.5.3",
+    "crypto": "0.0.3",
+    "secure-compare": "^3.0.1"
   }
 }
