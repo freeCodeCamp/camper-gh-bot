@@ -83,10 +83,24 @@ function validatePullRequest(data) {
         'fix/',
         'feature/'
       ],
+      closeKeywords: [
+        'close',
+        'closes',
+        'closed',
+        'fix',
+        'fixes',
+        'fixed',
+        'resolve',
+        'resolves',
+        'resolved'
+      ],
       maxCommitCount: 1
     }
   },
-  debugInfo = '';
+  debugInfo = '',
+  validCommit = '(?:' + repoConfig.rules.closeKeywords.join('|') +
+    ')\\s+([\\w\\d-.]*\\/?[\\w\\d-.]*)?#\\d+';
+  validCommit = new RegExp(validCommit, 'ig');
 
   if (repoConfig.actions.indexOf(data.action) === -1) {
     console.log(
@@ -142,8 +156,8 @@ function validatePullRequest(data) {
         ) {
           warnArray.push(
             'You\'ve done your changes in `' + data.pull_request.head.ref +
-            '` branch. Always work in a separate, correctly named branch, ' +
-            'please. Closing this PR.'
+            '` branch. Always work in a separate, correctly named branch. ' +
+            'Closing this PR.'
           );
           shouldBeClosed = true;
         }
@@ -161,16 +175,35 @@ function validatePullRequest(data) {
           );
         }
 
+        var msg = 'Do not include issue numbers and following [keywords]' +
+          '(https://help.github.com/articles/closing-issues-via-commit-' +
+          'messages/#keywords-for-closing-issues)';
+
+        if (data.pull_request.title.match(validCommit)) {
+          warnArray.push(
+            msg + ' in pull request\'s title.'
+          );
+        }
+
         if (body.length) {
           for (var l = 0; l < body.length; l++) {
             // show more debug info (commits of the current PR)
             console.log((l + 1) + ': ' + body[l].commit.message);
           }
 
+          for (var m = 0; m < body.length; m++) {
+            if (body[m].commit.message.match(validCommit)) {
+              warnArray.push(
+                msg + ' in commit messages.'
+              );
+              break;
+            }
+          }
+
           if (body.length > repoConfig.rules.maxCommitCount) {
             warnArray.push(
               'You have pushed more than one commit. ' +
-              'When you finish editing, please, [squash](https://github.com/' +
+              'When you finish editing, [squash](https://github.com/' +
               'FreeCodeCamp/FreeCodeCamp/wiki/git-rebase#squashing-' +
               'multiple-commits-into-one) your commits into one.'
             );
