@@ -267,8 +267,8 @@ app.post('/', function(req, res) {
   req.pipe(bl(function(err, body) {
     var signature = req.headers['x-hub-signature'],
       computedSignature = 'sha1=' + crypto.
-        createHmac("sha1", process.env.SECRET_TOKEN).update(body.toString()).
-        digest("hex");
+        createHmac("sha1", process.env.SECRET_TOKEN).
+        update(new Buffer(body.toString(), 'utf8')).digest("hex");
     if (
       res.req.headers['x-hub-signature'] === signature &&
       res.req.headers['x-hub-signature'] === computedSignature &&
