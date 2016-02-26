@@ -13,6 +13,8 @@ npm install
 -  Only check `public_repo` and click Generate token
 -  Create an `.env` file in project's root with the following in it:
 `GITHUB_TOKEN=insert_token_here`
+-  Set in your `.env` file a Secret key which we'll be using for [securing our webhook](https://developer.github.com/webhooks/securing/):
+`SECRET_TOKEN=insert_key_here`
 -  `npm start`
 
 ## How To Use?
@@ -22,6 +24,7 @@ npm install
  - your organization on GitHub > Settings > Webhooks > Add Webhook
 - Payload URL: For example, `https://fcc-pr-bot.herokuapp.com/`
 - Let me select individual events > Check only `Pull Request`
+- Set your Secret key (the same as in `.env` file)
 - Add Webhook
 
 And you are done. **Note that bot must have write access to the repository to be able to close pull requests.**
@@ -33,7 +36,7 @@ Here's a list of the possible options:
 ```js
 {
   userBlacklistForPR: [], // PR made by users in this list will be ignored
-  actions: [], // List of PR actions that mention-bot will listen to
+  actions: [], // List of PR actions that FccPrBot will listen to
   rules: {
     critical: { // If these reles are met, PR will be closed
       blacklistedBaseBranchNames: [], // Do not open PR's against branches from this list
@@ -46,7 +49,7 @@ Here's a list of the possible options:
 }
 ```
 
-If you would like the mention-bot to function on private repositories, set the `GITHUB_USER` and `GITHUB_PASSWORD` environment variables or add them to `.env` file. You must disable two-factor authentication or you will receive a console log like this: `Login to ${USERNAME} failed`.
+If you would like the FccPrBot to function on private repositories, set the `GITHUB_USER` and `GITHUB_PASSWORD` environment variables or add them to `.env` file. You must disable two-factor authentication or you will receive a console log like this: `Login to ${USERNAME} failed`.
 
 #### This project is based on a heavily changed version of Facebook's [mention-bot](https://github.com/facebook/mention-bot).
 
