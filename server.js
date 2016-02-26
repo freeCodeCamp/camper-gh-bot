@@ -13,10 +13,8 @@ require('dotenv').load();
 var bl = require('bl'),
 config = require('./package.json').config,
 express = require('express'),
-fs = require('fs'),
-util = require('util'),
 GitHubApi = require('github4'),
-crypto = require("crypto"),
+crypto = require('crypto'),
 compare = require('secure-compare');
 
 if (!process.env.GITHUB_TOKEN) {
