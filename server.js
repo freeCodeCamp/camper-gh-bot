@@ -15,7 +15,18 @@ config = require('./package.json').config,
 express = require('express'),
 GitHubApi = require('github4'),
 crypto = require('crypto'),
-compare = require('secure-compare');
+compare = require('secure-compare'),
+configRules = require('./repo-rules.json');
+
+if (typeof configRules !== 'object') {
+  try {
+    configRules = JSON.parse(configRules);
+  } catch (e) {
+    console.log('Repository\'s configuration is not an object, exiting.');
+    console.log(e);
+    process.exit(1);
+  }
+}
 
 if (!process.env.GITHUB_TOKEN) {
   console.error('The bot was started without a github account to post with.');
@@ -58,110 +69,155 @@ github.authenticate({
 
 var app = express();
 
-function validatePullRequest(data) {
-  // default config
-  var repoConfig = {
-    userBlacklistForPR: [
-      'greenkeeperio-bot',
-      'QuincyLarson',
-      'BerkeleyTrue'
-    ],
-    actions: [
-      'opened',
-      'reopened',
-      'synchronize'
-    ],
-    rules: {
-      critical: {
-        blacklistedBaseBranchNames: ['master'],
-        blacklistedHeadBranchNames: [
-          'master',
-          'staging'
-        ]
-      },
-      allowedBranchNames: [
-        'fix/',
-        'feature/'
-      ],
-      closeKeywords: [
-        'close',
-        'closes',
-        'closed',
-        'fix',
-        'fixes',
-        'fixed',
-        'resolve',
-        'resolves',
-        'resolved'
-      ],
-      maxCommitCount: 1
-    }
-  },
-  debugInfo = '',
-  validCommit = '(?:' + repoConfig.rules.closeKeywords.join('|') +
-    ')\\s+([\\w\\d-.]*\\/?[\\w\\d-.]*)?#\\d+';
-  validCommit = new RegExp(validCommit, 'ig');
+function getFiles(conf) {
+  return new Promise(function(resolve, reject) {
+    github.pullRequests.getFiles(conf, function(err, body) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(body);
+      }
+    });
+  });
+}
 
-  if (repoConfig.actions.indexOf(data.action) === -1) {
-    console.log(
-      'Skipping because action is ' + data.action + '.',
-      'We only care about: \'' + repoConfig.actions.join("', '") + '\''
-    );
-    return;
-  }
+function getCommits(conf) {
+  return new Promise(function(resolve, reject) {
+    github.pullRequests.getCommits(conf, function(err, body) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(body);
+      }
+    });
+  });
+}
 
-  if (data.action === 'opened' || data.action === 'reopened') {
+async function validatePullRequest(data) {
+  // load rules configuration for current repository
+  var baseRepoFullName = data.pull_request.base.repo.full_name,
+    repoConfig = configRules[baseRepoFullName],
+    githubConfig = {
+      user: data.repository.owner.login,
+      repo: data.repository.name,
+      number: data.pull_request.number
+    };
+
+  if (repoConfig && typeof repoConfig !== 'undefined') {
+
+    var debugInfo = '', warnArray = [];
     if (
-      repoConfig.userBlacklistForPR
-        .indexOf(data.pull_request.user.login) >= 0
+      repoConfig.rules.closeKeywords &&
+      repoConfig.rules.closeKeywords.length
     ) {
-      console.log('Skipping because blacklisted user created Pull Request.');
+      validCommit = '(?:' + repoConfig.rules.closeKeywords.join('|') +
+        ')\\s+([\\w\\d-.]*\\/?[\\w\\d-.]*)?#\\d+';
+      validCommit = new RegExp(validCommit, 'ig');
+    }
+
+    if (
+      repoConfig.actions &&
+      repoConfig.actions.indexOf(data.action) === -1
+    ) {
+      console.log(
+        'Skipping because action is ' + data.action + '.',
+        'We only care about: \'' + repoConfig.actions.join("', '") + '\''
+      );
       return;
     }
 
-    github.pullRequests.getCommits({
-      user: data.repository.owner.login,
-      repo: data.repository.name,
-      number: data.pull_request.number,
-    }, function(err, body) {
-      if (!err) {
-        warnArray = ['@' + data.sender.login + ' thanks for the PR.'];
-        debugInfo = [
-          'This PR (' + data.pull_request.base.repo.full_name + '#' +
-            data.number + ') is ' + data.action,
-          'Pushed branch is `' + data.pull_request.head.ref + '`',
-          'PR is opened against `' + data.pull_request.base.ref + '` branch',
-          'PR has ' + data.pull_request.commits + ' commit(s)'
-        ].join('\n');
+    if (data.action === 'opened' || data.action === 'reopened') {
+      if (
+        repoConfig.userBlacklistForPR &&
+        repoConfig.userBlacklistForPR
+          .indexOf(data.pull_request.user.login) >= 0
+      ) {
+        console.log('Skipping because blacklisted user created Pull Request.');
+        return;
+      }
 
-        console.log(debugInfo);
+      warnArray = ['@' + data.sender.login + ' thanks for the PR.'];
+      debugInfo = [
+        'This PR (' + data.pull_request.base.repo.full_name + '#' +
+          data.number + ') is ' + data.action,
+        'Pushed branch is `' + data.pull_request.head.ref + '`',
+        'PR is opened against `' + data.pull_request.base.ref + '` branch',
+        'PR has ' + data.pull_request.commits + ' commit(s)'
+      ].join('\n');
 
-        var shouldBeClosed = false;
-        if (
-          repoConfig
-            .rules.critical.blacklistedBaseBranchNames
-            .indexOf(data.pull_request.base.ref) >= 0
-        ) {
-          warnArray.push(
-            'This PR is opened against `' + data.pull_request.base.ref +
-            '` branch and will be closed.'
-          );
-          shouldBeClosed = true;
+      console.log(debugInfo);
+
+      var shouldBeClosed = false;
+      if (
+        repoConfig.rules.critical.blacklistedBaseBranchNames &&
+        repoConfig.rules.critical.blacklistedBaseBranchNames
+          .indexOf(data.pull_request.base.ref) >= 0
+      ) {
+        warnArray.push(
+          'This PR is opened against `' + data.pull_request.base.ref +
+          '` branch and will be closed.'
+        );
+        shouldBeClosed = true;
+      }
+
+      if (
+        repoConfig.rules.critical.blacklistedHeadBranchNames &&
+        repoConfig.rules.critical.blacklistedHeadBranchNames
+          .indexOf(data.pull_request.head.ref) >= 0
+      ) {
+        warnArray.push(
+          'You\'ve done your changes in `' + data.pull_request.head.ref +
+          '` branch. Always work in a separate, correctly named branch. ' +
+          'Closing this PR.'
+        );
+        shouldBeClosed = true;
+      }
+
+      if (
+        repoConfig.rules.critical.allowedFileNames &&
+        repoConfig.rules.critical.allowedFileNames.length
+      ) {
+        try {
+          var filesArr = await getFiles(githubConfig), isValidFileName = true;
+
+          if (filesArr && filesArr.length) {
+            filesArr.every(function(file) {
+              if (file.filename) {
+                isValidFileName = 
+                repoConfig.rules.critical.allowedFileNames.some(function(val) {
+                  var reg = new RegExp(val, 'i');
+                  var lastElem = file.filename.
+                    split('/')[file.filename.split('/').length - 1];
+                  return (
+                    file.filename.match(reg) &&
+                    file.filename.match(reg)[0].length === lastElem.length
+                  );
+                });
+                return isValidFileName;
+              }
+            });
+          }
+
+          if (!isValidFileName) {
+            warnArray.push(
+              'Filenames should not contain any special characters or ' +
+              'spaces. Use only `-` to separate words. ' +
+              'Files should have the `.md` extension. ' +
+              'Filenames should follow a Camel-Case format. Closing this PR.'
+            );
+            shouldBeClosed = true;
+          }
+        } catch (e) {
+          console.log('Something went wrong while getting PR\'s files.');
+          console.log(e);
+          return;
         }
+      }
 
-        if (
-          repoConfig
-            .rules.critical.blacklistedHeadBranchNames
-            .indexOf(data.pull_request.head.ref) >= 0
-        ) {
-          warnArray.push(
-            'You\'ve done your changes in `' + data.pull_request.head.ref +
-            '` branch. Always work in a separate, correctly named branch. ' +
-            'Closing this PR.'
-          );
-          shouldBeClosed = true;
-        }
-
+      if (
+        repoConfig.rules.allowedBranchNames &&
+        repoConfig.rules.allowedBranchNames.length
+      ) {
         var isPrefix = repoConfig.rules.allowedBranchNames.some(function(val) {
           var reg = new RegExp(val, 'i');
           return data.pull_request.head.ref.match(reg);
@@ -174,25 +230,28 @@ function validatePullRequest(data) {
             '` prefixes. Name, your branches correctly next time, please.'
           );
         }
+      }
 
-        var msg = 'Do not include issue numbers and following [keywords]' +
-          '(https://help.github.com/articles/closing-issues-via-commit-' +
-          'messages/#keywords-for-closing-issues)';
+      var msg = 'Do not include issue numbers and following [keywords]' +
+        '(https://help.github.com/articles/closing-issues-via-commit-' +
+        'messages/#keywords-for-closing-issues)';
 
-        if (data.pull_request.title.match(validCommit)) {
-          warnArray.push(
-            msg + ' in pull request\'s title.'
-          );
-        }
+      if (validCommit && data.pull_request.title.match(validCommit)) {
+        warnArray.push(
+          msg + ' in pull request\'s title.'
+        );
+      }
 
-        if (body.length) {
-          for (var l = 0; l < body.length; l++) {
+      try {
+        var commitsArr = await getCommits(githubConfig);
+        if (commitsArr && commitsArr.length) {
+          for (var l = 0; l < commitsArr.length; l++) {
             // show more debug info (commits of the current PR)
-            console.log((l + 1) + ': ' + body[l].commit.message);
+            console.log((l + 1) + ': ' + commitsArr[l].commit.message);
           }
 
-          for (var m = 0; m < body.length; m++) {
-            if (body[m].commit.message.match(validCommit)) {
+          for (var m = 0; m < commitsArr.length; m++) {
+            if (validCommit && commitsArr[m].commit.message.match(validCommit)) {
               warnArray.push(
                 msg + ' in commit messages.'
               );
@@ -200,7 +259,10 @@ function validatePullRequest(data) {
             }
           }
 
-          if (body.length > repoConfig.rules.maxCommitCount) {
+          if (
+            typeof repoConfig.rules.maxCommitCount === 'number' &&
+            commitsArr.length > repoConfig.rules.maxCommitCount
+          ) {
             warnArray.push(
               'You have pushed more than one commit. ' +
               'When you finish editing, [squash](https://github.com/' +
@@ -209,44 +271,40 @@ function validatePullRequest(data) {
             );
           }
         }
-
-        if (warnArray.length > 1) {
-          warnArray.push(
-            'Please, review our [**Guidelines for Contributing**]' +
-            '(https://github.com/FreeCodeCamp/FreeCodeCamp/blob/staging/' +
-            'CONTRIBUTING.md), thank you!.'
-          );
-
-          github.issues.createComment({
-            user: data.repository.owner.login,
-            repo: data.repository.name,
-            number: data.pull_request.number,
-            body: warnArray.join('\n')
-          });
-        }
-
-        if (shouldBeClosed) {
-          github.pullRequests.update({
-            user: data.repository.owner.login,
-            repo: data.repository.name,
-            number: data.pull_request.number,
-            state: 'closed'
-          });
-        }
-      } else {
-        console.error(err);
+      } catch (e) {
+        console.log('Something went wrong while getting PR\'s commits.');
+        console.log(e);
+        return;
       }
-    });
-  } else if (data.action === 'synchronize') {
-    var msgTest = '@' + data.sender.login + ' updated the pull request.';
-    console.log(msgTest);
 
-    github.issues.createComment({
-      user: data.repository.owner.login,
-      repo: data.repository.name,
-      number: data.pull_request.number,
-      body: msgTest
-    });
+      if (warnArray.length > 1) {
+        warnArray.push(
+          'Please, review our [**Guidelines for Contributing**]' +
+          '(https://github.com/' + baseRepoFullName +
+          repoConfig.repoContribPath + '), thank you!.'
+        );
+ 
+        githubConfig.body = warnArray.join('\n');
+        github.issues.createComment(githubConfig);
+        delete githubConfig.body;
+      }
+
+      if (shouldBeClosed) {
+        githubConfig.state = 'closed';
+        github.pullRequests.update(githubConfig);
+        delete githubConfig.state;
+      }
+    } else if (data.action === 'synchronize') {
+      var msgTest = '@' + data.sender.login + ' updated the pull request.';
+      console.log(msgTest);
+
+      githubConfig.body = msgTest;
+      github.issues.createComment(githubConfig);
+      delete githubConfig.body;
+    }
+  } else {
+    console.log(baseRepoFullName + ' is not listed in rules configuration' +
+      ' file. Skipping.');
   }
 }
 
@@ -256,6 +314,7 @@ async function work(body) {
     data = JSON.parse(body.toString());
   } catch (e) {
     console.error(e);
+    return;
   }
 
   validatePullRequest(data);

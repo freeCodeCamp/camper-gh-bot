@@ -13,8 +13,9 @@ npm install
 -  Only check `public_repo` and click Generate token
 -  Create an `.env` file in project's root with the following in it:
 `GITHUB_TOKEN=insert_token_here`
--  Set in your `.env` file a Secret key which we'll be using for [securing our webhook](https://developer.github.com/webhooks/securing/):
+-  Set in your `.env` file a Secret key which will be used for [securing your webhook](https://developer.github.com/webhooks/securing/):
 `SECRET_TOKEN=insert_key_here`
+- Define rules for your repositories in `repo-rules.json` file (see below)
 -  `npm start`
 
 ## How To Use?
@@ -31,20 +32,24 @@ And you are done. **Note that bot must have write access to the repository to be
 
 ## Configuration
 
-Here's a list of the possible options:
+All configuration goes to `repo-rules.json` file. You can specify different configs for your repositories.
 
 ```js
 {
-  userBlacklistForPR: [], // PR made by users in this list will be ignored
-  actions: [], // List of PR actions that FccPrBot will listen to
-  rules: {
-    critical: { // If these reles are met, PR will be closed
-      blacklistedBaseBranchNames: [], // Do not open PR's against branches from this list
-      blacklistedHeadBranchNames: [] // Do not open PR's from branches in this list
-    },
-    allowedBranchNames: [], // allowed branch name prefixes
-    closeKeywords: [], //  keywords which PR titles and commit messages should not contain
-    maxCommitCount: 1 // Max number of allowed commit messages count. If exceeded, bot will ask to squash commits.
+  "bugron/FccPrBot": {
+    "userBlacklistForPR": [], // PR made by users in this list will be ignored
+    "actions": [], // List of PR actions that FccPrBot will listen to
+    "repoContribPath": "" // Path to you CONTRIBUTION.md file (should start with a slash, for example, /blob/master/.github/CONTRIBUTING.md)
+    "rules": {
+      "critical": {
+        "blacklistedBaseBranchNames": [], // Do not open PR's against branches from this list
+        "blacklistedHeadBranchNames": [], // Do not open PR's from branches in this list
+        "allowedFileNames": [] // Test all filenames against this (for expamle, "[\\w\\d-]+\\.md$"). Close the PR if not all filenames satisfy this rule
+      },
+      "allowedBranchNames": [], // Allowed branch name prefixes
+      "closeKeywords": [], //  Keywords which PR titles and commit messages should not contain
+      "maxCommitCount": 1 // Max number of allowed commit messages count. If exceeded, bot will ask to squash commits.
+    }
   }
 }
 ```
