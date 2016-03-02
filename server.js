@@ -93,6 +93,13 @@ function getCommits(conf) {
   });
 }
 
+function camelCase(str, separator) {
+  var words = str.toLowerCase().split(separator);
+  return words.map(function(word) {
+    return word.charAt(0).toUpperCase() + word.substr(1);
+  }).join(separator) === str;
+}
+
 async function validatePullRequest(data) {
   // load rules configuration for current repository
   var baseRepoFullName = data.pull_request.base.repo.full_name,
@@ -190,7 +197,8 @@ async function validatePullRequest(data) {
                     split('/')[file.filename.split('/').length - 1];
                   return (
                     file.filename.match(reg) &&
-                    file.filename.match(reg)[0].length === lastElem.length
+                    file.filename.match(reg)[0].length === lastElem.length &&
+                    camelCase(lastElem, '-')
                   );
                 });
                 return isValidFileName;
