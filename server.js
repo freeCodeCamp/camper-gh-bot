@@ -143,7 +143,7 @@ async function validatePullRequest(data) {
         return;
       }
 
-      warnArray = ['@' + data.sender.login + ' thanks for the PR.'];
+      warnArray = ['@' + data.pull_request.user.login + ' thanks for the PR.'];
       debugInfo = [
         'This PR (' + data.pull_request.base.repo.full_name + '#' +
           data.number + ') is ' + data.action,
@@ -303,7 +303,8 @@ async function validatePullRequest(data) {
         delete githubConfig.state;
       }
     } else if (data.action === 'synchronize') {
-      var msgTest = '@' + data.sender.login + ' updated the pull request.';
+      var msgTest = '@' + data.pull_request.user.login +
+        ' updated the pull request.';
       console.log(msgTest);
 
       githubConfig.body = msgTest;
