@@ -10,13 +10,12 @@
  */
 require('dotenv').load();
 
-var bl = require('bl'),
-config = require('./package.json').config,
-express = require('express'),
-GitHubApi = require('github4'),
-crypto = require('crypto'),
-compare = require('secure-compare'),
-configRules = require('./repo-rules.json');
+let bl = require('bl'),
+  express = require('express'),
+  crypto = require('crypto'),
+  compare = require('secure-compare'),
+  configRules = require('./repo-rules.json'),
+  utils = require('./utils');
 
 if (typeof configRules !== 'object') {
   try {
@@ -55,56 +54,13 @@ if (!process.env.GITHUB_USER) {
   );
 }
 
-var github = new GitHubApi({
-  version: '3.0.0',
-  host: config.gheHost || 'api.github.com',
-  protocol: config.gheProtocol || 'https',
-  port: config.ghePort || '443'
-});
+let app = express();
 
-github.authenticate({
-  type: 'oauth',
-  token: process.env.GITHUB_TOKEN
-});
-
-var app = express();
-
-function getFiles(conf) {
-  return new Promise(function(resolve, reject) {
-    github.pullRequests.getFiles(conf, function(err, body) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(body);
-      }
-    });
-  });
-}
-
-function getCommits(conf) {
-  return new Promise(function(resolve, reject) {
-    github.pullRequests.getCommits(conf, function(err, body) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(body);
-      }
-    });
-  });
-}
-
-function camelCase(str, separator) {
-  var words = str.toLowerCase().split(separator);
-  return words.map(function(word) {
-    return word.charAt(0).toUpperCase() + word.substr(1);
-  }).join(separator) === str;
-}
-
-async function validatePullRequest(data) {
+let validatePullRequest = async (data) => {
   // load rules configuration for current repository
-  var baseRepoFullName = data.pull_request.base.repo.full_name,
-    repoConfig = configRules[baseRepoFullName],
-    githubConfig = {
+  const baseRepoFullName = data.pull_request.base.repo.full_name,
+    repoConfig = configRules[baseRepoFullName];
+  let githubConfig = {
       user: data.repository.owner.login,
       repo: data.repository.name,
       number: data.pull_request.number
@@ -112,7 +68,7 @@ async function validatePullRequest(data) {
 
   if (repoConfig && typeof repoConfig !== 'undefined') {
 
-    var debugInfo = '', warnArray = [];
+    let debugInfo = '', warnArray = [];
     if (
       repoConfig.rules.closeKeywords &&
       repoConfig.rules.closeKeywords.length
@@ -154,7 +110,7 @@ async function validatePullRequest(data) {
 
       console.log(debugInfo);
 
-      var shouldBeClosed = false;
+      let shouldBeClosed = false;
       if (
         repoConfig.rules.critical.blacklistedBaseBranchNames &&
         repoConfig.rules.critical.blacklistedBaseBranchNames
@@ -185,20 +141,21 @@ async function validatePullRequest(data) {
         repoConfig.rules.critical.allowedFileNames.length
       ) {
         try {
-          var filesArr = await getFiles(githubConfig), isValidFileName = true;
+          let filesArr = await utils.getFiles(githubConfig),
+            isValidFileName = true;
 
           if (filesArr && filesArr.length) {
-            filesArr.every(function(file) {
+            filesArr.every((file) => {
               if (file.filename) {
                 isValidFileName = 
-                repoConfig.rules.critical.allowedFileNames.some(function(val) {
-                  var reg = new RegExp(val, 'i');
-                  var lastElem = file.filename.
-                    split('/')[file.filename.split('/').length - 1];
+                repoConfig.rules.critical.allowedFileNames.some((val) => {
+                  let reg = new RegExp(val, 'i'),
+                    lastElem = file.filename.
+                      split('/')[file.filename.split('/').length - 1];
                   return (
                     file.filename.match(reg) &&
                     file.filename.match(reg)[0].length === lastElem.length &&
-                    camelCase(lastElem, '-')
+                    utils.camelCase(lastElem, '-')
                   );
                 });
                 return isValidFileName;
@@ -226,9 +183,8 @@ async function validatePullRequest(data) {
         repoConfig.rules.allowedBranchNames &&
         repoConfig.rules.allowedBranchNames.length
       ) {
-        var isPrefix = repoConfig.rules.allowedBranchNames.some(function(val) {
-          var reg = new RegExp(val, 'i');
-          return data.pull_request.head.ref.match(reg);
+        let isPrefix = repoConfig.rules.allowedBranchNames.some((val) => {
+          return data.pull_request.head.ref.match(new RegExp(val, 'i'));
         });
 
         if (!isPrefix) {
@@ -240,7 +196,7 @@ async function validatePullRequest(data) {
         }
       }
 
-      var msg = 'Do not include issue numbers and following [keywords]' +
+      let msg = 'Do not include issue numbers and following [keywords]' +
         '(https://help.github.com/articles/closing-issues-via-commit-' +
         'messages/#keywords-for-closing-issues)';
 
@@ -251,14 +207,14 @@ async function validatePullRequest(data) {
       }
 
       try {
-        var commitsArr = await getCommits(githubConfig);
+        let commitsArr = await utils.getCommits(githubConfig);
         if (commitsArr && commitsArr.length) {
-          for (var l = 0; l < commitsArr.length; l++) {
+          for (let l = 0; l < commitsArr.length; l++) {
             // show more debug info (commits of the current PR)
             console.log((l + 1) + ': ' + commitsArr[l].commit.message);
           }
 
-          for (var m = 0; m < commitsArr.length; m++) {
+          for (let m = 0; m < commitsArr.length; m++) {
             if (validCommit && commitsArr[m].commit.message.match(validCommit)) {
               warnArray.push(
                 msg + ' in commit messages.'
@@ -303,7 +259,7 @@ async function validatePullRequest(data) {
         delete githubConfig.state;
       }
     } else if (data.action === 'synchronize') {
-      var msgTest = '@' + data.pull_request.user.login +
+      let msgTest = '@' + data.pull_request.user.login +
         ' updated the pull request.';
       console.log(msgTest);
 
@@ -315,10 +271,10 @@ async function validatePullRequest(data) {
     console.log(baseRepoFullName + ' is not listed in rules configuration' +
       ' file. Skipping.');
   }
-}
+};
 
-async function work(body) {
-  var data = {};
+let work = async (body) => {
+  let data = {};
   try {
     data = JSON.parse(body.toString());
   } catch (e) {
@@ -327,11 +283,11 @@ async function work(body) {
   }
 
   validatePullRequest(data);
-}
+};
 
-app.post('/', function(req, res) {
-  req.pipe(bl(function(err, body) {
-    var signature = req.headers['x-hub-signature'],
+app.post('/', (req, res) => {
+  req.pipe(bl((err, body) => {
+    let signature = req.headers['x-hub-signature'],
       computedSignature = 'sha1=' + crypto.
         createHmac("sha1", process.env.SECRET_TOKEN).
         update(new Buffer(body.toString(), 'utf8')).digest("hex");
@@ -343,14 +299,14 @@ app.post('/', function(req, res) {
       compare(computedSignature, res.req.headers['x-hub-signature']) &&
       compare(signature, res.req.headers['x-hub-signature'])
     ) {
-      work(body).then(function() { res.end(); });
+      work(body).then(() => { res.end(); });
     } else {
       console.error('This request is not secured! Aborting.');
     }
- }));
+  }));
 });
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.send(
     'FreeCodeCamp PR Bot is Active. ' +
     'Go to https://github.com/bugron/FccPrBot for more information.'
@@ -359,6 +315,6 @@ app.get('/', function(req, res) {
 
 app.set('port', process.env.PORT || 5000);
 
-app.listen(app.get('port'), function() {
+app.listen(app.get('port'), () => {
   console.log('Listening on port', app.get('port'));
 });
