@@ -43,5 +43,7 @@ module.exports = {
     return words.map((word) => {
       return word.charAt(0).toUpperCase() + word.substr(1);
     }).join(separator) === str;
-  }
-}
+  },
+
+  github
+};

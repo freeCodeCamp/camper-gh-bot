@@ -15,15 +15,15 @@ let bl = require('bl'),
   crypto = require('crypto'),
   compare = require('secure-compare'),
   configRules = require('./repo-rules.json'),
-  utils = require('./utils');
+  utils = require('./utils'),
+  github = utils.github;
 
 if (typeof configRules !== 'object') {
   try {
     configRules = JSON.parse(configRules);
   } catch (e) {
     console.log('Repository\'s configuration is not an object, exiting.');
-    console.log(e);
-    process.exit(1);
+    throw e;
   }
 }
 
@@ -36,9 +36,11 @@ if (!process.env.GITHUB_TOKEN) {
   console.error('4) Run the following command:');
   console.error('GITHUB_TOKEN=insert_token_here npm start');
   console.error('5) Run the following command in another tab:');
-  console.error('curl -X POST -d @__tests__/data/23.webhook http://localhost:5000/');
-  console.error('6) Check that it commented here: https://github.com/fbsamples/bot-testing/pull/23');
-  process.exit(1);
+  console.error('curl -X POST -d @__tests__/data/23.webhook ' +
+    'http://localhost:5000/');
+  console.error('6) Check that it commented here: https://github.com/' +
+    'fbsamples/bot-testing/pull/23');
+  throw new Error();
 }
 
 if (!process.env.GITHUB_USER) {
@@ -61,10 +63,10 @@ let validatePullRequest = async (data) => {
   const baseRepoFullName = data.pull_request.base.repo.full_name,
     repoConfig = configRules[baseRepoFullName];
   let githubConfig = {
-      user: data.repository.owner.login,
-      repo: data.repository.name,
-      number: data.pull_request.number
-    };
+    user: data.repository.owner.login,
+    repo: data.repository.name,
+    number: data.pull_request.number
+  }, validCommit;
 
   if (repoConfig && typeof repoConfig !== 'undefined') {
 
@@ -147,7 +149,7 @@ let validatePullRequest = async (data) => {
           if (filesArr && filesArr.length) {
             filesArr.every((file) => {
               if (file.filename) {
-                isValidFileName = 
+                isValidFileName =
                 repoConfig.rules.critical.allowedFileNames.some((val) => {
                   let reg = new RegExp(val, 'i'),
                     lastElem = file.filename.
@@ -189,7 +191,7 @@ let validatePullRequest = async (data) => {
 
         if (!isPrefix) {
           warnArray.push(
-            'Your branch name should start with one of `' + 
+            'Your branch name should start with one of `' +
             repoConfig.rules.allowedBranchNames.join(', ') +
             '` prefixes. Name, your branches correctly next time, please.'
           );
@@ -215,7 +217,10 @@ let validatePullRequest = async (data) => {
           }
 
           for (let m = 0; m < commitsArr.length; m++) {
-            if (validCommit && commitsArr[m].commit.message.match(validCommit)) {
+            if (
+              validCommit &&
+              commitsArr[m].commit.message.match(validCommit)
+            ) {
               warnArray.push(
                 msg + ' in commit messages.'
               );
@@ -247,7 +252,7 @@ let validatePullRequest = async (data) => {
           '(https://github.com/' + baseRepoFullName +
           repoConfig.repoContribPath + '), thank you!.'
         );
- 
+
         githubConfig.body = warnArray.join('\n');
         github.issues.createComment(githubConfig);
         delete githubConfig.body;
@@ -287,15 +292,16 @@ let work = async (body) => {
 
 app.post('/', (req, res) => {
   req.pipe(bl((err, body) => {
+    if (err) { throw err; }
     let signature = req.headers['x-hub-signature'],
       computedSignature = 'sha1=' + crypto.
-        createHmac("sha1", process.env.SECRET_TOKEN).
-        update(new Buffer(body.toString(), 'utf8')).digest("hex");
+        createHmac('sha1', process.env.SECRET_TOKEN).
+        update(new Buffer(body.toString(), 'utf8')).digest('hex');
     if (
       res.req.headers['x-hub-signature'] === signature &&
       res.req.headers['x-hub-signature'] === computedSignature &&
       computedSignature === signature &&
-      compare(computedSignature, signature)  &&
+      compare(computedSignature, signature) &&
       compare(computedSignature, res.req.headers['x-hub-signature']) &&
       compare(signature, res.req.headers['x-hub-signature'])
     ) {
