@@ -1,8 +1,8 @@
 {
+  "presets": ["es2015"],
   "plugins": [
     "syntax-async-functions",
     "transform-regenerator",
-    "transform-es2015-arrow-functions",
     "transform-strict-mode"
   ]
 }

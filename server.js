@@ -10,13 +10,18 @@
  */
 require('dotenv').load();
 
+import {
+  github,
+  getFiles,
+  getCommits,
+  camelCase
+} from './utils';
+
 let bl = require('bl'),
   express = require('express'),
   crypto = require('crypto'),
   compare = require('secure-compare'),
-  configRules = require('./repo-rules.json'),
-  utils = require('./utils'),
-  github = utils.github;
+  configRules = require('./repo-rules.json');
 
 if (typeof configRules !== 'object') {
   try {
@@ -143,7 +148,7 @@ let validatePullRequest = async (data) => {
         repoConfig.rules.critical.allowedFileNames.length
       ) {
         try {
-          let filesArr = await utils.getFiles(githubConfig),
+          let filesArr = await getFiles(githubConfig),
             isValidFileName = true;
 
           if (filesArr && filesArr.length) {
@@ -157,11 +162,12 @@ let validatePullRequest = async (data) => {
                   return (
                     file.filename.match(reg) &&
                     file.filename.match(reg)[0].length === lastElem.length &&
-                    utils.camelCase(lastElem, '-')
+                    camelCase(lastElem, '-')
                   );
                 });
                 return isValidFileName;
               }
+              return false;
             });
           }
 
@@ -209,7 +215,7 @@ let validatePullRequest = async (data) => {
       }
 
       try {
-        let commitsArr = await utils.getCommits(githubConfig);
+        let commitsArr = await getCommits(githubConfig);
         if (commitsArr && commitsArr.length) {
           for (let l = 0; l < commitsArr.length; l++) {
             // show more debug info (commits of the current PR)
