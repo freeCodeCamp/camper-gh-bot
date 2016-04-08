@@ -4,7 +4,7 @@
   "license": "BSD-3-Clause",
   "repository": "bugron/FccPrBot",
   "scripts": {
-    "start": "babel-node server.js"
+    "start": "node run-server.js"
   },
   "main": "./server.js",
   "engines": {
