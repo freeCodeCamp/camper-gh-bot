@@ -4,7 +4,8 @@
   "license": "BSD-3-Clause",
   "repository": "bugron/FccPrBot",
   "scripts": {
-    "start": "node run-server.js"
+    "start": "node run-server.js",
+    "test": "babel-node ./node_modules/istanbul/lib/cli cover -- node_modules/mocha/bin/_mocha --recursive --reporter spec"
   },
   "main": "./server.js",
   "engines": {
@@ -26,6 +27,10 @@
   },
   "devDependencies": {
     "babel-eslint": "^6.0.2",
-    "eslint": "^2.7.0"
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.3.0",
+    "eslint": "^2.7.0",
+    "istanbul": "^1.0.0-alpha",
+    "mocha": "^2.4.5"
   }
 }

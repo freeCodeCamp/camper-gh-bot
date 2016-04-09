@@ -3,3 +3,4 @@ npm-debug.log
 .idea
 *.env
 repo-rules.json
+coverage
