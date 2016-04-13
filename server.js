@@ -10,73 +10,26 @@
  */
 
 import { validatePullRequest } from './lib/validatePullRequest';
+import {
+  connectionValidator,
+  bodyParser
+} from './lib/middlewars';
 
-const bl = require('bl'),
-  app = require('express')(),
-  crypto = require('crypto'),
-  compare = require('secure-compare');
+const app = require('express')();
 
-if (!process.env.GITHUB_TOKEN) {
-  console.error('The bot was started without a github account to post with.');
-  console.error('To get started:');
-  console.error('1) Create a new account for the bot');
-  console.error('2) Settings > Personal access tokens > Generate new token');
-  console.error('3) Only check `public_repo` and click Generate token');
-  console.error('4) Run the following command:');
-  console.error('GITHUB_TOKEN=insert_token_here npm start');
-  console.error('5) Run the following command in another tab:');
-  console.error('curl -X POST -d @__tests__/data/23.webhook ' +
-    'http://localhost:5000/');
-  console.error('6) Check that it commented here: https://github.com/' +
-    'fbsamples/bot-testing/pull/23');
-  throw new Error();
-}
+app.use(bodyParser());
+app.use(connectionValidator);
 
-if (!process.env.GITHUB_USER) {
-  console.warn(
-    'There was no github user detected.',
-    'This is fine, but FccPrBot won\'t work with private repos.'
-  );
-  console.warn(
-    'To make FccPrBot work with private repos, please expose',
-    'GITHUB_USER and GITHUB_PASSWORD as environment variables.',
-    'The user and password must have access to the private repo',
-    'you want to use.'
-  );
-}
-
-let work = async (body) => {
-  let data = {};
-  try {
-    data = JSON.parse(body.toString());
-  } catch (e) {
-    console.error(e);
-    return;
-  }
-
-  validatePullRequest(data);
+const work = async (body) => {
+  validatePullRequest(body);
 };
 
 app.post('/', (req, res) => {
-  req.pipe(bl((err, body) => {
-    if (err) { throw err; }
-    let signature = req.headers['x-hub-signature'],
-      computedSignature = 'sha1=' + crypto.
-        createHmac('sha1', process.env.SECRET_TOKEN).
-        update(new Buffer(body.toString(), 'utf8')).digest('hex');
-    if (
-      res.req.headers['x-hub-signature'] === signature &&
-      res.req.headers['x-hub-signature'] === computedSignature &&
-      computedSignature === signature &&
-      compare(computedSignature, signature) &&
-      compare(computedSignature, res.req.headers['x-hub-signature']) &&
-      compare(signature, res.req.headers['x-hub-signature'])
-    ) {
-      work(body).then(() => { res.end(); });
-    } else {
-      console.error('This request is not secured! Aborting.');
-    }
-  }));
+  if (req.body) {
+    work(req.body).then(() => { res.end(); });
+  } else {
+    res.status(400).end();
+  }
 });
 
 app.get('/', (req, res) => {
