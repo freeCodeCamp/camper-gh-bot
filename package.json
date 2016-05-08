@@ -22,7 +22,7 @@
     "bl": "^1.0.0",
     "dotenv": "^2.0.0",
     "express": "^4.13.3",
-    "github4": "^0.5.3",
+    "github4": "^1.0.0",
     "secure-compare": "^3.0.1"
   },
   "devDependencies": {
