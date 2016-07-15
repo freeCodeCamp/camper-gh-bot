@@ -37,7 +37,9 @@ All configuration goes to `repo-rules.json` file. You can specify different conf
 ```js
 {
   "bugron/FccPrBot": {
-    "userBlacklistForPR": [], // PR made by users in this list will be ignored
+    "userForbiddenForPR": [], // PRs made by users in this list will be closed. To close PRs from EVERYONE add a star symbol to this array: `"userForbiddenForPR": ["*"]`
+    "closeAllPRsMessage": "", // MUST be specified if `userForbiddenForPR` array contains a star sumbol (see above)
+    "userBlacklistForPR": [], // PRs made by users in this list will be ignored
     "actions": [], // List of PR actions that FccPrBot will listen to
     "repoContribPath": "" // Path to you CONTRIBUTION.md file (should start with a slash, for example, /blob/master/.github/CONTRIBUTING.md)
     "rules": {
