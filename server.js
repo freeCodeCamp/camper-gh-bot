@@ -9,7 +9,7 @@
  * @flow
  */
 
-import { validatePullRequest } from './lib/validatePullRequest';
+import validatePullRequest from './lib/validatePullRequest';
 import {
   connectionValidator,
   bodyParser

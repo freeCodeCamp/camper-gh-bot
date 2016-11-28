@@ -1,4 +1,4 @@
-import { validatePullRequest } from '../lib/validatePullRequest';
+import validatePullRequest from '../lib/validatePullRequest';
 const chai = require('chai'),
   expect = chai.expect,
   chaiAsPromised = require('chai-as-promised'),
