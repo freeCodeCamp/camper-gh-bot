@@ -1,18 +1,22 @@
 {
-  "name": "FccPrBot",
-  "version": "0.0.1",
-  "license": "BSD-3-Clause",
-  "repository": "bugron/FccPrBot",
+  "name": "freecodecamp-github-bot",
+  "version": "1.0.0",
+  "description": "A github bot for freecodecamp's open source repos on GitHub",
+  "main": "run-server.js",
   "scripts": {
     "start": "node run-server.js",
     "test": "./node_modules/.bin/babel-node node_modules/mocha/bin/_mocha --recursive -R spec",
     "coverage": "./node_modules/.bin/babel-node ./node_modules/istanbul/lib/cli cover -- node_modules/mocha/bin/_mocha --recursive --reporter spec"
   },
-  "main": "./server.js",
   "engines": {
     "node": ">=4"
   },
   "config": {},
+  "keywords": [
+    "Github",
+    "bot"
+  ],
+  "license": "BSD-3-Clause",
   "dependencies": {
     "babel-cli": "^6.10.0",
     "babel-core": "^6.0.0",
@@ -34,5 +38,13 @@
     "eslint": "^3.1.0",
     "istanbul": "^1.0.0-alpha",
     "mocha": "^3.2.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raisedadead/freeCodeCamp-github-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/raisedadead/freeCodeCamp-github-bot/issues"
+  },
+  "homepage": "https://github.com/raisedadead/freeCodeCamp-github-bot#readme"
 }
