@@ -13,7 +13,7 @@ import validatePullRequest from './lib/validatePullRequest';
 import {
   connectionValidator,
   bodyParser
-} from './lib/middlewars';
+} from './lib/middleware';
 
 const app = require('express')();
 
@@ -33,10 +33,7 @@ app.post('/', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send(
-    'FreeCodeCamp PR Bot is Active. ' +
-    'Go to https://github.com/bugron/FccPrBot for more information.'
-  );
+  res.send('freeCodeCamp PR Bot is Active. ');
 });
 
 app.set('port', process.env.PORT || 5000);

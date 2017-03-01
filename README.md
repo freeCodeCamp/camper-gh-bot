@@ -3,8 +3,8 @@ This bot will automatically check if pull requests follow repositories contribut
 ## How To Contribute or Run Your Own Bot?
 
 ```bash
-git clone https://github.com/bugron/FccPrBot.git
-cd FccPrBot
+git clone https://github.com/freeCodeCamp/freeCodeCamp-github-bot.git
+cd freeCodeCamp-github-bot
 npm install
 ```
 
@@ -36,11 +36,11 @@ All configuration goes to `repo-rules.json` file. You can specify different conf
 
 ```js
 {
-  "bugron/FccPrBot": {
+  "freeCodeCamp/freeCodeCamp-github-bot": {
     "userForbiddenForPR": [], // PRs made by users in this list will be closed. To close PRs from EVERYONE add a star symbol to this array: `"userForbiddenForPR": ["*"]`
     "closeAllPRsMessage": "", // MUST be specified if `userForbiddenForPR` array contains a star sumbol (see above)
     "userBlacklistForPR": [], // PRs made by users in this list will be ignored
-    "actions": [], // List of PR actions that FccPrBot will listen to
+    "actions": [], // List of PR actions that freeCodeCamp-github-bot will listen to
     "repoContribPath": "" // Path to you CONTRIBUTION.md file (should start with a slash, for example, /blob/master/.github/CONTRIBUTING.md)
     "rules": {
       "critical": {
@@ -56,7 +56,7 @@ All configuration goes to `repo-rules.json` file. You can specify different conf
 }
 ```
 
-If you would like the FccPrBot to function on private repositories, set the `GITHUB_USER` and `GITHUB_PASSWORD` environment variables or add them to `.env` file. You must disable two-factor authentication or you will receive a console log like this: `Login to ${USERNAME} failed`.
+If you would like the freeCodeCamp-github-bot to function on private repositories, set the `GITHUB_USER` and `GITHUB_PASSWORD` environment variables or add them to `.env` file. You must disable two-factor authentication or you will receive a console log like this: `Login to ${USERNAME} failed`.
 
 ## License
 

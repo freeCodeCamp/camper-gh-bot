@@ -41,10 +41,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/raisedadead/freeCodeCamp-github-bot.git"
+    "url": "git+https://github.com/freeCodeCamp/freeCodeCamp-github-bot.git"
   },
   "bugs": {
-    "url": "https://github.com/raisedadead/freeCodeCamp-github-bot/issues"
+    "url": "https://github.com/freeCodeCamp/freeCodeCamp-github-bot/issues"
   },
-  "homepage": "https://github.com/raisedadead/freeCodeCamp-github-bot#readme"
+  "homepage": "https://github.com/freeCodeCamp/freeCodeCamp-github-bot#readme"
 }
