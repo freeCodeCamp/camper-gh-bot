@@ -4,12 +4,12 @@ const chai = require('chai'),
   chaiAsPromised = require('chai-as-promised');
 let githubConfig = {
   owner: 'bugron',
-  repo: 'freeCodeCamp-github-bot',
+  repo: 'camper-gh-bot',
   number: 4
 },
 fakeGithubConfig = {
   owner: 'bugron',
-  repo: 'freeCodeCamp-github-bot',
+  repo: 'camper-gh-bot',
   number: -1
 };
 
