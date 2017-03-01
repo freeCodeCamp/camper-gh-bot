@@ -1,0 +1,44 @@
+{
+  "freeCodeCamp/freeCodeCamp": {
+    "repoContribPath": "/blob/staging/CONTRIBUTING.md",
+    "userBlacklistForPR": [
+        "greenkeeperio-bot",
+        "QuincyLarson",
+        "BerkeleyTrue",
+        "snyk-bot"
+    ],
+    "actions": [
+      "opened",
+      "reopened",
+      "synchronize"
+    ],
+    "rules": {
+      "critical": {
+        "blacklistedBaseBranchNames": [
+          "master"
+        ],
+        "blacklistedHeadBranchNames": [
+          "master",
+          "staging"
+        ]
+      },
+      "allowedBranchNames": [
+        "fix/",
+        "feature/",
+        "translate/"
+      ],
+      "closeKeywords": [
+        "close",
+        "closes",
+        "closed",
+        "fix",
+        "fixes",
+        "fixed",
+        "resolve",
+        "resolves",
+        "resolved"
+      ],
+      "maxCommitCount": 1
+    }
+  }
+}
