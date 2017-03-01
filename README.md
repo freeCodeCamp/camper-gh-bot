@@ -58,8 +58,8 @@ All configuration goes to `repo-rules.json` file. You can specify different conf
 
 If you would like the FccPrBot to function on private repositories, set the `GITHUB_USER` and `GITHUB_PASSWORD` environment variables or add them to `.env` file. You must disable two-factor authentication or you will receive a console log like this: `Login to ${USERNAME} failed`.
 
-#### This project is based on a heavily changed version of Facebook's [mention-bot](https://github.com/facebook/mention-bot).
-
 ## License
 
-mention-bot is BSD-licensed. We also provide an additional patent grant.
+freeCodeCamp-github-bot is available via [`BSD 3-clause “New” or “Revised” License`](./LICENSE.md).
+
+This project is based on Facebook's [mention-bot](https://github.com/facebook/mention-bot). Please refer [`docs`](./docs/) for their licenses and patents grant which is also applicable to parts of this software.
