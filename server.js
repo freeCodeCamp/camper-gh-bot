@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
+ * LICENSE file in the docs directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @flow
@@ -16,6 +16,7 @@ import {
 } from './lib/middleware';
 
 const app = require('express')();
+const path = require('path');
 
 app.use(bodyParser());
 app.use(connectionValidator);
@@ -33,7 +34,7 @@ app.post('/', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('freeCodeCamp PR Bot is Active. ');
+  res.sendFile(path.join(__dirname + '/index.html'));
 });
 
 app.set('port', process.env.PORT || 5000);
