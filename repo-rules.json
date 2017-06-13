@@ -23,7 +23,10 @@
         ]
       },
       "allowedBranchNames": [
+        "bug/",
+        "chore/",
         "fix/",
+        "feat",
         "feature/",
         "translate/"
       ],
