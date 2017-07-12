@@ -19,7 +19,9 @@
         ],
         "blacklistedHeadBranchNames": [
           "master",
-          "staging"
+          "staging",
+          "backup/master",
+          "backup/staging"
         ]
       },
       "allowedBranchNames": [
