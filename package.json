@@ -6,12 +6,18 @@
   "scripts": {
     "start": "node run-server.js",
     "test": "./node_modules/.bin/babel-node node_modules/mocha/bin/_mocha --recursive -R spec",
-    "coverage": "./node_modules/.bin/babel-node ./node_modules/istanbul/lib/cli cover -- node_modules/mocha/bin/_mocha --recursive --reporter spec"
+    "coverage": "./node_modules/.bin/babel-node ./node_modules/istanbul/lib/cli cover -- node_modules/mocha/bin/_mocha --recursive --reporter spec",
+    "commit": "git-cz",
+    "commitmsg": "validate-commit-msg"
   },
   "engines": {
     "node": ">=4"
   },
-  "config": {},
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-freecodecamp"
+    }
+  },
   "keywords": [
     "Github",
     "bot"
@@ -35,9 +41,13 @@
     "babel-eslint": "^7.1.1",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
+    "commitizen": "^2.9.6",
+    "cz-freecodecamp": "^1.0.0",
     "eslint": "^3.1.0",
+    "husky": "^0.14.3",
     "istanbul": "^1.0.0-alpha",
-    "mocha": "^3.2.0"
+    "mocha": "^3.2.0",
+    "validate-commit-msg": "^2.13.0"
   },
   "repository": {
     "type": "git",
