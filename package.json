@@ -1,12 +1,10 @@
 {
-  "name": "freecodecamp-github-bot",
+  "name": "camper-gh-bot",
   "version": "1.0.0",
   "description": "A github bot for freecodecamp's open source repos on GitHub",
   "main": "run-server.js",
   "scripts": {
     "start": "node run-server.js",
-    "test": "./node_modules/.bin/babel-node node_modules/mocha/bin/_mocha --recursive -R spec",
-    "coverage": "./node_modules/.bin/babel-node ./node_modules/istanbul/lib/cli cover -- node_modules/mocha/bin/_mocha --recursive --reporter spec",
     "commit": "git-cz",
     "commitmsg": "validate-commit-msg"
   },
@@ -56,5 +54,11 @@
   "bugs": {
     "url": "https://github.com/freeCodeCamp/camper-gh-bot/issues"
   },
-  "homepage": "https://github.com/freeCodeCamp/camper-gh-bot#readme"
+  "homepage": "https://github.com/freeCodeCamp/camper-gh-bot#readme",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib",
+    "test": "test"
+  },
+  "author": "freeCodeCamp Team <team@freecodecamp.org> (https://freecodecamp.org)"
 }
