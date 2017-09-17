@@ -3,13 +3,13 @@ const chai = require('chai'),
   expect = chai.expect,
   chaiAsPromised = require('chai-as-promised');
 let githubConfig = {
-  owner: 'bugron',
-  repo: 'camper-gh-bot',
+  owner: 'raisedadead',
+  repo: 'bot-tests-repo',
   number: 4
 },
 fakeGithubConfig = {
-  owner: 'bugron',
-  repo: 'camper-gh-bot',
+  owner: 'raisedadead',
+  repo: 'bot-tests-repo',
   number: -1
 };
 
