@@ -1,64 +1,41 @@
 {
   "name": "camper-gh-bot",
   "version": "1.0.0",
-  "description": "A github bot for freecodecamp's open source repos on GitHub",
-  "main": "run-server.js",
-  "scripts": {
-    "start": "node run-server.js",
-    "commit": "git-cz",
-    "commitmsg": "validate-commit-msg"
-  },
-  "engines": {
-    "node": ">=4"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-freecodecamp"
-    }
-  },
+  "description": "A GitHub bot for sanity checks on freeCodeCamp's open source repositories.",
+  "author": "freecodecamp <team@freecodecamp.org> (https://freecodecamp.org)",
   "keywords": [
     "Github",
     "bot"
   ],
   "license": "BSD-3-Clause",
+  "repository": "https://github.com/freecodecamp/camper-gh-bot.git",
+  "scripts": {
+    "dev": "nodemon --exec \"npm start\"",
+    "start": "probot run ./index.js",
+    "lint": "standard --fix",
+    "test": "jest && standard"
+  },
   "dependencies": {
-    "babel-cli": "^6.10.0",
-    "babel-core": "^6.0.0",
-    "babel-plugin-syntax-async-functions": "^6.1.4",
-    "babel-plugin-transform-regenerator": "^6.1.4",
-    "babel-plugin-transform-strict-mode": "^6.6.5",
-    "babel-polyfill": "^6.1.4",
-    "babel-preset-es2015": "^6.6.0",
-    "body-parser": "^1.15.0",
-    "dotenv": "^2.0.0",
-    "express": "^4.13.3",
-    "github": "^6.1.0",
-    "secure-compare": "^3.0.1"
+    "probot": "^6.0.0",
+    "probot-app-commitlint": "ahmed-taj/commitlint-bot"
+  },
+  "probot": {
+    "apps": [
+      "probot-app-commitlint"
+    ]
   },
   "devDependencies": {
-    "babel-eslint": "^7.1.1",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^6.0.0",
-    "commitizen": "^2.9.6",
-    "cz-freecodecamp": "^1.0.0",
-    "eslint": "^3.1.0",
-    "husky": "^0.14.3",
-    "istanbul": "^1.0.0-alpha",
-    "mocha": "^3.2.0",
-    "validate-commit-msg": "^2.13.0"
+    "jest": "^21.2.1",
+    "nodemon": "^1.17.2",
+    "smee-client": "^1.0.1",
+    "standard": "^10.0.3"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/freeCodeCamp/camper-gh-bot.git"
+  "engines": {
+    "node": ">= 8.3.0"
   },
-  "bugs": {
-    "url": "https://github.com/freeCodeCamp/camper-gh-bot/issues"
-  },
-  "homepage": "https://github.com/freeCodeCamp/camper-gh-bot#readme",
-  "directories": {
-    "doc": "docs",
-    "lib": "lib",
-    "test": "test"
-  },
-  "author": "freeCodeCamp Team <team@freecodecamp.org> (https://freecodecamp.org)"
+  "standard": {
+    "env": [
+      "jest"
+    ]
+  }
 }
