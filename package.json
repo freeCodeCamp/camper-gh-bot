@@ -1,6 +1,7 @@
 {
   "name": "camper-gh-bot",
   "version": "1.0.0",
+  "private": true,
   "description": "A GitHub bot for sanity checks on freeCodeCamp's open source repositories.",
   "author": "freecodecamp <team@freecodecamp.org> (https://freecodecamp.org)",
   "keywords": [
@@ -17,11 +18,15 @@
   },
   "dependencies": {
     "probot": "^6.0.0",
-    "probot-app-commitlint": "ahmed-taj/commitlint-bot"
+    "first-pr-merge": "github:behaviorbot/first-pr-merge",
+    "new-issue-welcome": "github:behaviorbot/new-issue-welcome",
+    "new-pr-welcome": "github:behaviorbot/new-pr-welcome"
   },
   "probot": {
     "apps": [
-      "probot-app-commitlint"
+      "first-pr-merge",
+      "new-issue-welcome",
+      "new-pr-welcome"
     ]
   },
   "devDependencies": {
