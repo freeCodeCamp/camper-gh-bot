@@ -20,7 +20,9 @@
     "probot": "^6.0.0",
     "first-pr-merge": "github:behaviorbot/first-pr-merge",
     "new-issue-welcome": "github:behaviorbot/new-issue-welcome",
-    "new-pr-welcome": "github:behaviorbot/new-pr-welcome"
+    "new-pr-welcome": "github:behaviorbot/new-pr-welcome",
+    "ci-reporter": "github:JasonEtco/ci-reporter",
+    "commitlint-bot": "github:ahmed-taj/commitlint-bot"
   },
   "probot": {
     "apps": [
