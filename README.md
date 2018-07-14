@@ -38,7 +38,7 @@ All configuration goes to `repo-rules.json` file. You can specify different conf
 {
   "freeCodeCamp/camper-gh-bot": {
     "userForbiddenForPR": [], // PRs made by users in this list will be closed. To close PRs from EVERYONE add a star symbol to this array: `"userForbiddenForPR": ["*"]`
-    "closeAllPRsMessage": "", // MUST be specified if `userForbiddenForPR` array contains a star sumbol (see above)
+    "closeAllPRsMessage": "", // MUST be specified if `userForbiddenForPR` array contains a star symbol (see above)
     "userBlacklistForPR": [], // PRs made by users in this list will be ignored
     "actions": [], // List of PR actions that camper-gh-bot will listen to
     "repoContribPath": "" // Path to you CONTRIBUTION.md file (should start with a slash, for example, /blob/master/.github/CONTRIBUTING.md)
